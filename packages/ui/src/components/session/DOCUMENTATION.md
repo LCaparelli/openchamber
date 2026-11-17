@@ -58,6 +58,15 @@ own their contracts in `project-context/DOCUMENTATION.md` and
   eligibility reads remain errors because an empty picker would claim the project
   has no sessions. Request identity depends on session directories and IDs, so
   streaming record updates do not restart eligibility reads.
+- The target picker's candidates take the global session cache as authority; a
+  live directory copy only adds a session the cache lacks, as the stores'
+  gap-fill rule requires. Until the cache has loaded, the picker reads as
+  loading, never as a project without sessions.
+- The target picker lists root sessions while its search is empty and subagents
+  only through a search, each named as its parent's subagent. Review sessions
+  count as roots, `ownWork` workers never appear, an id query matches a whole
+  `ses_` id only, and the saved target always shows first on the empty list,
+  even when it is a subagent, ineligible or not loaded.
 - The selected scheduled-task scope is mirrored synchronously for async work.
   Only the newest request for the scope on screen can replace the list or finish
   its spinner. Task actions retain the scope of the displayed list, and an editor
@@ -113,6 +122,14 @@ touch offers no tooltip to explain an icon alone.
 
 Each hint waits for a resting pointer in its own tooltip group. Menus focus hovered
 items, so focus-triggered hints would open immediately while scanning the menu.
+
+### Why the target picker hides subagents until a search
+
+A task may target a subagent session (#3340), so hiding subagents outright would
+remove an accepted feature, and listing them all buried the root sessions under
+hundreds of runs. The maintainer chose roots at rest with subagents one search
+away. The list stops at 100 rows with a line asking for a sharper query, because
+cmdk renders every row it navigates and a project can hold thousands of sessions.
 
 ### Why the switcher orders by recency
 

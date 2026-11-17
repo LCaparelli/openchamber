@@ -29,6 +29,8 @@ import {
   validateDraft,
   type ScheduledTaskDraft,
 } from './scheduledTaskEditorDraft';
+import { ScheduledTaskTargetPicker } from './ScheduledTaskTargetPicker';
+import { scheduledTaskTargetCandidates } from './scheduledTaskTargetResults';
 import { useI18n } from '@/lib/i18n';
 import { isValidCronExpression, getNextRuns, CRON_EXAMPLES } from '@/lib/cron';
 import { canonicalizeTimezone } from '@/lib/timezones';
@@ -190,11 +192,8 @@ export function ScheduledTaskEditorDialog(props: {
   }, [open, props.projectId]);
   const globalSessions = useGlobalSessionsStore((state) => state.activeSessions);
   const liveSessions = useAllLiveSessions();
-  const candidates = React.useMemo(() => {
-    const merged = new Map(globalSessions.map((session) => [session.id, session]));
-    for (const session of liveSessions) merged.set(session.id, session);
-    return [...merged.values()].filter((session) => !session.time?.archived);
-  }, [globalSessions, liveSessions]);
+  const globalSessionsStatus = useGlobalSessionsStore((state) => state.status);
+  const candidates = React.useMemo(() => scheduledTaskTargetCandidates(globalSessions, liveSessions), [globalSessions, liveSessions]);
   const candidatesKey = React.useMemo(
     () => candidates.map((session) => `${session.id}:${session.directory ?? ''}`).sort().join('\n'),
     [candidates],
@@ -640,16 +639,14 @@ export function ScheduledTaskEditorDialog(props: {
       </SettingsStackedField>
       {draft.sessionMode === 'existing' ? (
         <SettingsStackedField label={t('sessions.scheduledTasks.editor.targetSession')} info={t('sessions.scheduledTasks.editor.targetHint')}>
-          <Select value={draft.targetSessionId} onValueChange={(targetSessionId) => setDraft((prev) => ({ ...prev, targetSessionId }))}>
-            <SelectTrigger><SelectValue placeholder={t('sessions.scheduledTasks.editor.targetSession')}>
-              {candidates.find((session) => session.id === draft.targetSessionId)?.title || draft.targetSessionId || undefined}
-            </SelectValue></SelectTrigger>
-            <SelectContent>
-              {eligibility.status === 'loading'
-                ? <SelectItem value="__loading" disabled>{t('common.loading')}</SelectItem>
-                : sessions.map((session) => <SelectItem key={session.id} value={session.id}>{session.title || session.id}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <ScheduledTaskTargetPicker
+            value={draft.targetSessionId}
+            eligible={sessions}
+            known={candidates}
+            load={eligibility.status !== 'idle' ? eligibility.status : globalSessionsStatus === 'idle' ? 'loading' : globalSessionsStatus}
+            isMobile={isMobile}
+            onSelect={(targetSessionId) => setDraft((prev) => ({ ...prev, targetSessionId }))}
+          />
           {eligibility.status === 'error' ? (
             <div className="flex items-center gap-2 typography-meta text-muted-foreground">
               <span>{t('sessions.scheduledTasks.editor.targetLoadFailed')}</span>
