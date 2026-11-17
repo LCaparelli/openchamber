@@ -2937,6 +2937,7 @@ export const dict: Record<I18nKey, string> = {
   "commandPalette.item.copySessionId": "Скопіювати ID сесії",
   "commandPalette.item.openMultiRun": "Паралельний запуск",
   "commandPalette.item.openArchive": "Відкрити архівовані сесії",
+  "commandPalette.item.toggleReasoningTraces": "Показати або приховати сліди міркувань",
   "commandPalette.item.openNotes": "Відкрити панель нотаток",
   "commandPalette.item.openTodos": "Відкрити панель завдань",
   "commandPalette.item.openSettings": "Відкрити налаштування...",
